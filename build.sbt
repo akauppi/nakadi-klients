@@ -1,11 +1,8 @@
-import scala.collection.JavaConverters._
-
 name := "nakadi-klients"
 
 version := "0.3.0-SNAPSHOT"
 
-scalaVersion := "2.11.6"
-
+scalaVersion := "2.11.7"
 
 scalacOptions ++= Seq(
   "-deprecation", // Emit warning and location for usages of deprecated APIs.
@@ -20,8 +17,9 @@ scalacOptions ++= Seq(
   "-Ywarn-numeric-widen" // Warn when numerics are widened.
 )
 
+// Needed to get 'scoop' from local Maven repo ('~/.m2/repository/...')
+//
 resolvers += Resolver.mavenLocal
-resolvers += "Maven Central Server" at "http://repo1.maven.org/maven2"
 
 libraryDependencies ++= Seq(
   "com.typesafe.akka" %% "akka-actor" % "2.4.1",
@@ -38,5 +36,11 @@ libraryDependencies ++= Seq(
   "io.undertow" % "undertow-core"    % "1.2.12.Final" % "test",
   "io.undertow" % "undertow-servlet" % "1.2.12.Final" % "test",
   "org.apache.commons" % "commons-io" % "1.3.2" % "test",
-  "com.google.code.findbugs" % "jsr305" % "1.3.9" % "test"
+  "com.google.code.findbugs" % "jsr305" % "1.3.9" % "test",
+
+  // docker-it-scala
+  // See -> http://finelydistributed.io/integration-tests-with-docker/
+  //
+  "com.whisk" %% "docker-testkit-scalatest" % "0.5.4" % "test"  //,
+  //"com.whisk" %% "docker-testkit-config" % "0.5.4" % "test"
 )
