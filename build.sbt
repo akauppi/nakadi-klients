@@ -2,7 +2,11 @@ name := "nakadi-klients"
 
 version := "0.3.0-SNAPSHOT"
 
+organization := "org.zalando.nakadi.client"
+
 scalaVersion := "2.11.7"
+
+crossPaths := false
 
 scalacOptions ++= Seq(
   "-deprecation", // Emit warning and location for usages of deprecated APIs.
@@ -44,3 +48,12 @@ libraryDependencies ++= Seq(
   "com.whisk" %% "docker-testkit-scalatest" % "0.5.4" % "test"  //,
   //"com.whisk" %% "docker-testkit-config" % "0.5.4" % "test"
 )
+
+// see http://www.scala-sbt.org/0.13/docs/Publishing.html
+publishTo := {
+  val nexus = "https://maven.zalando.net/"
+  if (isSnapshot.value)
+    Some("snapshots" at nexus + "content/repositories/snapshots")
+  else
+    Some("releases"  at nexus + "content/repositories/releases")
+}
