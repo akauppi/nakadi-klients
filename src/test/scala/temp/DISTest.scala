@@ -10,9 +10,9 @@ import org.scalatest.{GivenWhenThen, BeforeAndAfterAll, Matchers, FlatSpec}
 import test.docker._
 
 object DISTest extends FlatSpec with Matchers with BeforeAndAfterAll with GivenWhenThen with ScalaFutures
-  with MyZookeeperDocker
-  with MyKafkaDocker
-  with MyNakadiDocker
+  with MyZookeeper
+  with MyKafka
+  with MyNakadi
   with DockerTestKit {    // Note: 'DockerTestKit' probably needs to be last
 
   // Make this a 'main', as long as it's being prototyped.
