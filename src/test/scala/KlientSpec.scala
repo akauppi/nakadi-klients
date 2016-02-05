@@ -1,4 +1,4 @@
-package org.zalando.nakadi.client
+package test.tools
 
 import java.net.URI
 import java.util
@@ -15,37 +15,15 @@ import org.scalatest.{BeforeAndAfterEach, Matchers, WordSpec}
 import org.zalando.nakadi.client.actor.PartitionReceiver
 import org.zalando.nakadi.client.utils.NakadiTestService
 import org.zalando.nakadi.client.utils.NakadiTestService.Builder
+import org.zalando.nakadi.client._
 
 import scala.concurrent.Await
 import scala.concurrent.duration._
-import scala.language.postfixOps
 import scala.language.implicitConversions
 
 
-class TestListener extends  Listener {
-  var receivedEvents = new AtomicReference[List[Event]](List[Event]())
-  var onConnectionClosed = 0
-  var onConnectionOpened = 0
-  var onConnectionFailed = 0
-
-  override def id = "test"
-
-  override def onReceive(topic: String, partition: String, cursor: Cursor, event: Event): Unit =  {
-    println(s"WAS CALLED [topic=$topic, partition=$partition, event=$event]" )
-
-    var old = List[Event]()
-    do {
-      old = receivedEvents.get()
-    }
-    while(! receivedEvents.compareAndSet(old, old ++ List(event)))
-  }
-  override def onConnectionClosed(topic: String, partition: String, lastCursor: Option[Cursor]): Unit = onConnectionClosed += 1
-  override def onConnectionOpened(topic: String, partition: String): Unit = onConnectionOpened += 1
-  override def onConnectionFailed(topic: String, partition: String, status: Int, error: String): Unit = onConnectionFailed += 1
-}
-
-
 class KlientSpec extends WordSpec with Matchers with BeforeAndAfterEach with LazyLogging with ScalaFutures {
+  import KlientSpec._
 
   var klient: Klient = null
   var service: NakadiTestService = null
@@ -342,7 +320,8 @@ class KlientSpec extends WordSpec with Matchers with BeforeAndAfterEach with Laz
       val listener = new TestListener
       Await.ready(
         klient.subscribeToTopic(topic, ListenParameters(Some("0")), listener, autoReconnect = true),
-        5 seconds)
+        5 seconds
+      )
 
       Thread.sleep(PartitionReceiver.NO_LISTENER_RECONNECT_DELAY_IN_S * 1000L + 2000L)
 
@@ -423,7 +402,8 @@ class KlientSpec extends WordSpec with Matchers with BeforeAndAfterEach with Laz
 
       Await.ready(
         klient.subscribeToTopic(topic, ListenParameters(Some("0")), listener, autoReconnect = true),
-        5 seconds)
+        5 seconds
+      )
 
       Thread.sleep(PartitionReceiver.NO_LISTENER_RECONNECT_DELAY_IN_S * 1000L + 2000L)
 
@@ -449,11 +429,13 @@ class KlientSpec extends WordSpec with Matchers with BeforeAndAfterEach with Laz
 
       Await.ready(
         klient.subscribeToTopic(topic, ListenParameters(Some("0")), listener, autoReconnect = true),
-        5 seconds)
+        5 seconds
+      )
 
       Await.ready(
         klient.subscribeToTopic(topic, ListenParameters(Some("0")), listener, autoReconnect = true),
-        5 seconds)
+        5 seconds
+      )
 
       Thread.sleep(1000L)
 
@@ -513,5 +495,35 @@ class KlientSpec extends WordSpec with Matchers with BeforeAndAfterEach with Laz
       .withResponsePayload(streamEvent1AsString)
       .build
     service.start()
+  }
+}
+
+
+// @Benjamin: Better to place helpers within a companion object of the test class. This way, the relationship
+//          and scope are clear. I also suggest placing such helpers after the test class (like here), so that
+//          when one opens the source file, the purpose (hey, I see tests!) is clear. AKa050216
+//
+object KlientSpec {
+  private
+  class TestListener extends Listener {
+    var receivedEvents = new AtomicReference[List[Event]](List[Event]())
+    var onConnectionClosed = 0
+    var onConnectionOpened = 0
+    var onConnectionFailed = 0
+
+    override def id = "test"
+
+    override def onReceive(topic: String, partition: String, cursor: Cursor, event: Event): Unit =  {
+      println(s"WAS CALLED [topic=$topic, partition=$partition, event=$event]" )
+
+      var old = List[Event]()
+      do {
+        old = receivedEvents.get()
+      }
+      while(! receivedEvents.compareAndSet(old, old ++ List(event)))
+    }
+    override def onConnectionClosed(topic: String, partition: String, lastCursor: Option[Cursor]): Unit = onConnectionClosed += 1
+    override def onConnectionOpened(topic: String, partition: String): Unit = onConnectionOpened += 1
+    override def onConnectionFailed(topic: String, partition: String, status: Int, error: String): Unit = onConnectionFailed += 1
   }
 }

@@ -43,7 +43,6 @@ class KlientSupervisor private (val endpoint: URI, val port: Int, val securedCon
 
   import akka.actor.SupervisorStrategy._
   import scala.concurrent.duration._
-  import scala.language.postfixOps
   import org.zalando.nakadi.client.actor.KlientSupervisor._
 
 

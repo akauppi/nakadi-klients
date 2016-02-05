@@ -1,31 +1,35 @@
-/*
-* Testing the docker-it-scala usage
-*/
 package test.temp
 
 import com.whisk.docker.scalatest.DockerTestKit
-import org.scalatest.concurrent.ScalaFutures
-import org.scalatest.{GivenWhenThen, BeforeAndAfterAll, Matchers, FlatSpec}
+import org.scalatest.{Matchers, FlatSpec}
 
 import test.docker._
 
-object DISTest extends FlatSpec with Matchers with BeforeAndAfterAll with GivenWhenThen with ScalaFutures
+/*
+* Trying out the docker-it-scala usage (adopted from docker-it-scala project)
+*/
+class DISTest extends FlatSpec with Matchers
   with MyZookeeper
   with MyKafka
   with MyNakadi
   with DockerTestKit {    // Note: 'DockerTestKit' probably needs to be last
 
-  // Make this a 'main', as long as it's being prototyped.
-  //
-  // Use: 'sbt test:run'
-  //
-  def main(args: Seq[String]): Unit = {
+  sys.env.getOrElse("DOCKER_HOST", {
+    val s= """|
+        |Please set up DOCKER_HOST first:
+        |
+        |  $ docker-machine start xxx
+        |  $ eval $(docker-machine env xxx)
+        |
+      """.stripMargin
 
-    //implicit val patience = PatienceConfig(Span(20, Seconds), Span(1, Second))
+    // Would like to fail the further tests nicely here, with giving the above error out. Seems hard? AKa050216
+    //
+    sys.error(s)    // for now (aborts here)
+  })
 
-    "all containers" should "be ready at the same time" in {
-      dockerContainers.foreach(x => info(x.image))
-      dockerContainers.forall(_.isReady().futureValue) shouldBe true
-    }
+  "all containers" should "be ready at the same time" in {
+    dockerContainers.foreach(x => info(x.image))
+    dockerContainers.forall(_.isReady().futureValue) shouldBe true
   }
 }

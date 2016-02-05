@@ -200,7 +200,6 @@ protected class KlientImpl(val endpoint: URI,
     logger.debug("sending [request={}]", request)
 
     import scala.concurrent.duration._
-    import scala.language.postfixOps
 
     Source
       .single(request)

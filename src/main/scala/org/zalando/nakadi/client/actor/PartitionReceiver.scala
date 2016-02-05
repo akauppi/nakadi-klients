@@ -141,7 +141,6 @@ class PartitionReceiver private (val endpoint: URI,
     if (automaticReconnect) {
       log.info("[automaticReconnect={}] -> reconnecting", automaticReconnect)
       import scala.concurrent.duration._
-      import scala.language.postfixOps
       context.system.scheduler.scheduleOnce(numerOfSeconds seconds, self, Init)
     }
     else log.info("[automaticReconnect={}] -> no reconnect", automaticReconnect)
