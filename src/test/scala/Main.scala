@@ -7,8 +7,6 @@ import akka.stream.ActorMaterializer
 import de.zalando.scoop.Scoop
 import org.zalando.nakadi.client.{KlientBuilder}
 
-import test.tools._
-
 /*
 * ...tbd. What is the purpose of this? AKa050216
 *

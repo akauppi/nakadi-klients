@@ -17,6 +17,8 @@ import org.zalando.nakadi.client.utils.NakadiTestService
 import org.zalando.nakadi.client.utils.NakadiTestService.Builder
 import org.zalando.nakadi.client._
 
+import org.zalando.nakadi.client.utils.{Request => NakadiRequest}
+
 import scala.concurrent.Await
 import scala.concurrent.duration._
 import scala.language.implicitConversions
@@ -26,17 +28,12 @@ class KlientSpec extends WordSpec with Matchers with BeforeAndAfterEach with Laz
   import KlientSpec._
 
   var klient: Klient = null
-  var service: NakadiTestService = null
+  implicit var service: NakadiTestService = null
   val objectMapper = new ObjectMapper
   objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
   objectMapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
   objectMapper.setPropertyNamingStrategy(PropertyNamingStrategy.CAMEL_CASE_TO_LOWER_CASE_WITH_UNDERSCORES)
   objectMapper.registerModule(new DefaultScalaModule)
-
-  val MEDIA_TYPE = "application/json"
-  val TOKEN = "<OAUTH Token>"
-  val HOST = "localhost"
-  val PORT = 8081
 
   override  def beforeEach() = {
     klient = KlientBuilder()
@@ -55,51 +52,7 @@ class KlientSpec extends WordSpec with Matchers with BeforeAndAfterEach with Laz
     }
   }
 
-  private def performStandardRequestChecks(expectedRequestPath: String, expectedRequestMethod: HttpString) = {
-    val collectedRequestsMap = service.getCollectedRequests
-    val requests = collectedRequestsMap.get(expectedRequestPath)
-    requests should not be null
-
-    val request = Iterators.getLast(requests.iterator)
-    request.getRequestPath should be(expectedRequestPath)
-    request.getRequestMethod should be(expectedRequestMethod)
-
-    val headerMap = request.getRequestHeaders
-
-    var headerValues: HeaderValues = null
-
-    if(request.getRequestMethod.equals(new HttpString("GET"))){
-      headerValues= headerMap.get(Headers.ACCEPT)
-      val mediaType= headerValues.getFirst
-      mediaType should be(MEDIA_TYPE)
-    }
-    else {
-      headerValues= headerMap.get(Headers.CONTENT_TYPE)
-      val mediaType= headerValues.getFirst
-      mediaType should be(MEDIA_TYPE)
-    }
-
-
-    headerValues = headerMap.get(Headers.AUTHORIZATION)
-    val authorizationHeaderValue = headerValues.getFirst
-    authorizationHeaderValue should be(s"Bearer $TOKEN")
-
-    request
-  }
-
-  private def checkQueryParameter(queryParameters: java.util.Map[String, util.Deque[String]], paramaterName: String, expectedValue: String) {
-    val paramDeque = queryParameters.get(paramaterName)
-    paramDeque should not be null
-    paramDeque.getFirst should be(expectedValue)
-  }
-
-  // 'whenReady' requires the timeout in its own special way. Note: move this to companion object, later. AKa280116
-  //
-  implicit def conv(x: FiniteDuration): ScalaTestTimeout = {
-    new ScalaTestTimeout(x)
-  }
-
-  "A Klient" must {
+  "Klient" must {
     "retrieve Nakadi metrics" in {
       val expectedResponse = Map("post_event" -> Map("calls_per_second" -> "0.005",
                                                       "count" -> "5",
@@ -503,7 +456,13 @@ class KlientSpec extends WordSpec with Matchers with BeforeAndAfterEach with Laz
 //          and scope are clear. I also suggest placing such helpers after the test class (like here), so that
 //          when one opens the source file, the purpose (hey, I see tests!) is clear. AKa050216
 //
-object KlientSpec {
+object KlientSpec extends Matchers {
+
+  private val MEDIA_TYPE = "application/json"
+  private val TOKEN = "<OAUTH Token>"   // @Benjamin: what is this? AKa090216
+  private val HOST = "localhost"
+  private val PORT = 8081
+
   private
   class TestListener extends Listener {
     var receivedEvents = new AtomicReference[List[Event]](List[Event]())
@@ -525,5 +484,51 @@ object KlientSpec {
     override def onConnectionClosed(topic: String, partition: String, lastCursor: Option[Cursor]): Unit = onConnectionClosed += 1
     override def onConnectionOpened(topic: String, partition: String): Unit = onConnectionOpened += 1
     override def onConnectionFailed(topic: String, partition: String, status: Int, error: String): Unit = onConnectionFailed += 1
+  }
+
+  private def checkQueryParameter(queryParameters: java.util.Map[String, util.Deque[String]], paramaterName: String, expectedValue: String): Unit = {
+    val paramDeque = queryParameters.get(paramaterName)
+    paramDeque should not be null
+    paramDeque.getFirst should be(expectedValue)
+  }
+
+  /*
+  * What is this doing? Can it be placed in the companion object? AKa090216
+  */
+  private def performStandardRequestChecks(expectedRequestPath: String, expectedRequestMethod: HttpString)(implicit service: NakadiTestService): NakadiRequest = {
+    val collectedRequestsMap = service.getCollectedRequests
+    val requests = collectedRequestsMap.get(expectedRequestPath)
+    requests should not be null
+
+    val request = Iterators.getLast(requests.iterator)
+    request.getRequestPath should be(expectedRequestPath)
+    request.getRequestMethod should be(expectedRequestMethod)
+
+    val headerMap = request.getRequestHeaders
+
+    var headerValues: HeaderValues = null
+
+    if(request.getRequestMethod.equals(new HttpString("GET"))){
+      headerValues= headerMap.get(Headers.ACCEPT)
+      val mediaType= headerValues.getFirst
+      mediaType should be(MEDIA_TYPE)
+    }
+    else {
+      headerValues= headerMap.get(Headers.CONTENT_TYPE)
+      val mediaType= headerValues.getFirst
+      mediaType should be(MEDIA_TYPE)
+    }
+
+    headerValues = headerMap.get(Headers.AUTHORIZATION)
+    val authorizationHeaderValue = headerValues.getFirst
+    authorizationHeaderValue should be(s"Bearer $TOKEN")
+
+    request
+  }
+
+  // 'whenReady' requires the timeout in its own special way. AKa280116
+  //
+  implicit def conv(x: FiniteDuration): ScalaTestTimeout = {
+    new ScalaTestTimeout(x)
   }
 }

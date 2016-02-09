@@ -8,22 +8,22 @@ import org.zalando.nakadi.client._
 
 class KlientBuilderSpec extends WordSpec with Matchers {
 
-  "A Klient builder" must {
-    "must build a Klient instance, if everything is set properly" ignore /*in*/ {
+  "KlientBuilder" must {
+    "build a Klient instance, if everything is set properly" ignore /*in*/ {
       KlientBuilder()
         .withEndpoint(new URI("localhost:8080"))
         .withTokenProvider(() => "my-token")
         .build()
     }
 
-    "must build a Java client instance, if everything is set properly" ignore /*in*/ {
+    "build a Java client instance, if everything is set properly" ignore /*in*/ {
       KlientBuilder()
         .withEndpoint(new URI("localhost:8080"))
         .withTokenProvider(() => "my-token")
         .buildJavaClient()
     }
 
-    "must throw an exception, if not all mandatory arguments are set" ignore /*in*/ {
+    "throw an exception, if not all mandatory arguments are set" ignore /*in*/ {
       an [IllegalStateException] must be thrownBy {
         KlientBuilder()
           .withTokenProvider(() => "my-token")
