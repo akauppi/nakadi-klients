@@ -54,28 +54,33 @@ class KlientSpec extends WordSpec with Matchers with BeforeAndAfterEach with Laz
 
   "Klient" must {
     "retrieve Nakadi metrics" in {
-      val expectedResponse = Map("post_event" -> Map("calls_per_second" -> "0.005",
-                                                      "count" -> "5",
-                                                      "status_codes" -> Map("201" -> 5)),
-                                  "get_metrics" -> Map("calls_per_second" -> "0.001",
-                                                       "count" -> "1",
-                                                       "status_codes" -> Map("401" -> 1)))
+      val expectedResponse = Map(
+        "post_event" -> Map(
+          "calls_per_second" -> "0.005",
+          "count" -> "5",
+          "status_codes" -> Map("201" -> 5)
+        ),
+        "get_metrics" -> Map(
+          "calls_per_second" -> "0.001",
+          "count" -> "1",
+          "status_codes" -> Map("401" -> 1)
+        )
+      )
+      val expectedResponseAsString: String = objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(expectedResponse)
 
-      // ---
-      val expectedResponseAsString = objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(expectedResponse)
       val requestMethod = new HttpString("GET")
       val requestPath = "/metrics"
       val responseStatusCode: Int = 200
 
-      val builder= new Builder
-      service = builder.withHost(HOST)
-                       .withPort(PORT)
-                       .withHandler(requestPath)
-                       .withRequestMethod(requestMethod)
-                       .withResponseContentType(MEDIA_TYPE)
-                       .withResponseStatusCode(responseStatusCode)
-                       .withResponsePayload(expectedResponseAsString)
-                       .build
+      service = new Builder()
+        .withHost(HOST)
+        .withPort(PORT)
+        .withHandler(requestPath)
+        .withRequestMethod(requestMethod)
+        .withResponseContentType(MEDIA_TYPE)
+        .withResponseStatusCode(responseStatusCode)
+        .withResponsePayload(expectedResponseAsString)
+        .build
       service.start()
 
       whenReady( klient.getMetrics, 5 seconds) {
@@ -94,15 +99,14 @@ class KlientSpec extends WordSpec with Matchers with BeforeAndAfterEach with Laz
       val requestPath = "/topics"
       val responseStatusCode = 200
 
-      val builder = new Builder
-      service = builder.withHost(HOST)
-                       .withPort(PORT)
-                       .withHandler(requestPath)
-                       .withRequestMethod(requestMethod)
-                       .withResponseContentType(MEDIA_TYPE)
-                       .withResponseStatusCode(responseStatusCode)
-                       .withResponsePayload(expectedResponseAsString)
-                       .build
+      service = (new Builder()).withHost(HOST)
+         .withPort(PORT)
+         .withHandler(requestPath)
+         .withRequestMethod(requestMethod)
+         .withResponseContentType(MEDIA_TYPE)
+         .withResponseStatusCode(responseStatusCode)
+         .withResponsePayload(expectedResponseAsString)
+         .build
       service.start()
 
       whenReady( klient.getTopics, 10 seconds ) {
@@ -129,15 +133,15 @@ class KlientSpec extends WordSpec with Matchers with BeforeAndAfterEach with Laz
       val requestPath = s"/topics/$topic/events"
       val responseStatusCode = 201
 
-      val builder = new NakadiTestService.Builder
-      service = builder.withHost(HOST)
-                       .withPort(PORT)
-                       .withHandler(requestPath)
-                       .withRequestMethod(requestMethod)
-                       .withResponseContentType(MEDIA_TYPE)
-                       .withResponseStatusCode(responseStatusCode)
-                       .withResponsePayload("")
-                       .build
+      service = new Builder()
+        .withHost(HOST)
+        .withPort(PORT)
+        .withHandler(requestPath)
+        .withRequestMethod(requestMethod)
+        .withResponseContentType(MEDIA_TYPE)
+        .withResponseStatusCode(responseStatusCode)
+        .withResponsePayload("")
+        .build
       service.start()
 
       whenReady( klient.postEvent(topic, event), 10 seconds ) {
@@ -160,15 +164,15 @@ class KlientSpec extends WordSpec with Matchers with BeforeAndAfterEach with Laz
       val requestPath = s"/topics/$topic/partitions"
       val responseStatusCode = 200
 
-      val builder = new Builder()
-      service = builder.withHost(HOST)
-                       .withPort(PORT)
-                       .withHandler(requestPath)
-                       .withRequestMethod(requestMethod)
-                       .withResponseContentType(MEDIA_TYPE)
-                       .withResponseStatusCode(responseStatusCode)
-                       .withResponsePayload(expectedResponse)
-                       .build
+      service = new Builder()
+        .withHost(HOST)
+        .withPort(PORT)
+        .withHandler(requestPath)
+        .withRequestMethod(requestMethod)
+        .withResponseContentType(MEDIA_TYPE)
+        .withResponseStatusCode(responseStatusCode)
+        .withResponsePayload(expectedResponse)
+        .build
       service.start()
 
       val receivedPartitions = whenReady( klient.getPartitions(topic), 10 seconds) {
@@ -190,15 +194,15 @@ class KlientSpec extends WordSpec with Matchers with BeforeAndAfterEach with Laz
       val requestPath = s"/topics/$topic/partitions/" + partitionId
       val responseStatusCode: Int = 200
 
-      val builder = new Builder()
-      service = builder.withHost(HOST)
-                       .withPort(PORT)
-                       .withHandler(requestPath)
-                       .withRequestMethod(requestMethod)
-                       .withResponseContentType(MEDIA_TYPE)
-                       .withResponseStatusCode(responseStatusCode)
-                       .withResponsePayload(expectedResponse)
-                       .build()
+      service = new Builder()
+        .withHost(HOST)
+        .withPort(PORT)
+        .withHandler(requestPath)
+        .withRequestMethod(requestMethod)
+        .withResponseContentType(MEDIA_TYPE)
+        .withResponseStatusCode(responseStatusCode)
+        .withResponsePayload(expectedResponse)
+        .build()
       service.start()
 
       val receivedPartition = whenReady(klient.getPartition(topic, partitionId), 10 seconds) {
@@ -247,27 +251,27 @@ class KlientSpec extends WordSpec with Matchers with BeforeAndAfterEach with Laz
       val httpMethod = new HttpString("GET")
       val statusCode = 200
 
-      val builder = new Builder()
-      service = builder.withHost(HOST)
-                       .withPort(PORT)
-                       .withHandler(partitionsRequestPath)
-                       .withRequestMethod(httpMethod)
-                       .withResponseContentType(MEDIA_TYPE)
-                       .withResponseStatusCode(statusCode)
-                       .withResponsePayload(partitionsAsString)
-                       .and
-                       .withHandler(partition1EventsRequestPath)
-                       .withRequestMethod(httpMethod)
-                       .withResponseContentType(MEDIA_TYPE)
-                       .withResponseStatusCode(statusCode)
-                       .withResponsePayload(streamEvent1AsString)
-                       .and
-                       .withHandler(partition2EventsRequestPath)
-                       .withRequestMethod(httpMethod)
-                       .withResponseContentType(MEDIA_TYPE)
-                       .withResponseStatusCode(statusCode)
-                       .withResponsePayload(streamEvent2AsString)
-                       .build
+      service = new Builder()
+        .withHost(HOST)
+        .withPort(PORT)
+        .withHandler(partitionsRequestPath)
+        .withRequestMethod(httpMethod)
+        .withResponseContentType(MEDIA_TYPE)
+        .withResponseStatusCode(statusCode)
+        .withResponsePayload(partitionsAsString)
+        .and
+        .withHandler(partition1EventsRequestPath)
+        .withRequestMethod(httpMethod)
+        .withResponseContentType(MEDIA_TYPE)
+        .withResponseStatusCode(statusCode)
+        .withResponsePayload(streamEvent1AsString)
+        .and
+        .withHandler(partition2EventsRequestPath)
+        .withRequestMethod(httpMethod)
+        .withResponseContentType(MEDIA_TYPE)
+        .withResponseStatusCode(statusCode)
+        .withResponsePayload(streamEvent2AsString)
+        .build
       service.start()
 
       val listener = new TestListener
@@ -432,8 +436,8 @@ class KlientSpec extends WordSpec with Matchers with BeforeAndAfterEach with Laz
     val httpMethod = new HttpString("GET")
     val statusCode = 200
 
-    val builder = new Builder()
-    service = builder.withHost(HOST)
+    service = new Builder()
+      .withHost(HOST)
       .withPort(PORT)
       .withHandler(partitionsRequestPath)
       .withRequestMethod(httpMethod)
